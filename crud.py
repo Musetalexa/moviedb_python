@@ -143,13 +143,16 @@ def add_movie_actor(db: Session, movie_id: int, actor_id: int):
 
 def update_movie_actors(db: Session, movie_id: int, actor_ids: List[int]):
     db_movie = get_movie(db=db, movie_id=movie_id)
-    db_stars = db.query(models.Star).filter(models.Star.id.in_(actor_ids))
-    if db_movie is None or db_stars is None:
+    if db_movie is None:
         return None
-    db_movie.stars = db_stars
+    db_movie.actors = []
+    for sid in actor_ids:
+        db_actor = get_star(db=db, star_id=sid)
+        if db_actor is None:
+            return None
+        db_movie.actors.append(db_actor)
     db.commit()
-    return(db_movie)
-
+    return db_movie 
     
 #Stars
 
