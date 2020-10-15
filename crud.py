@@ -79,24 +79,7 @@ def get_movies_count_by_year(db: Session):
             .group_by(models.Movie.year) \
             .order_by(models.Movie.year) \
             .all()
-            
-def get_min_duration_movie_by_year(db: Session):
-    return db.query(models.Movie.year, func.min(models.Movie.duration) ) \
-        .group_by(models.Movie.year) \
-        .order_by(models.Movie.year) \
-        .all()
         
-def get_max_duration_movie_by_year(db: Session):
-    return db.query(models.Movie.year, func.max(models.Movie.duration) ) \
-        .group_by(models.Movie.year) \
-        .order_by(models.Movie.year) \
-        .all()
-        
-def get_average_duration_movie_by_year(db: Session):
-    return db.query(models.Movie.year, func.avg(models.Movie.duration)) \
-        .group_by(models.Movie.year) \
-        .order_by(models.Movie.year) \
-        .all()
         
 def get_stats_by_year(db: Session):
     return db.query(models.Movie.year, func.min(models.Movie.duration), func.max(models.Movie.duration), func.avg(models.Movie.duration) ) \
@@ -153,8 +136,10 @@ def add_movie_actor(db: Session, movie_id: int, actor_id: int):
     db_star = get_star(db=db, star_id=actor_id)
     if db_movie is None or db_star is None:
         return None
-    db_movie.stars.append(db_star)
-    db.commit()
+    if db_star not in db_movie.actors:
+        db_movie.stars.append(db_star)
+        db.commit()
+    return(db_movie)
 
 def update_movie_actors(db: Session, movie_id: int, actor_ids: List[int]):
     db_movie = get_movie(db=db, movie_id=movie_id)
@@ -162,7 +147,8 @@ def update_movie_actors(db: Session, movie_id: int, actor_ids: List[int]):
     if db_movie is None or db_stars is None:
         return None
     db_movie.stars = db_stars
-    db.commit()  
+    db.commit()
+    return(db_movie)
 
     
 #Stars
@@ -188,6 +174,20 @@ def get_stats_movie_by_director(db: Session, min_count: int):
         .having(func.count(models.Movie.id) >= min_count) \
         .order_by(desc(func.count(models.Movie.id))) \
         .all()
+        
+def get_stats_movie_by_actor(db: Session, min_count):
+    return db.query(models.Star.name, func.count(models.Movie.id), func.min(models.Movie.year), func.max(models.Movie.year) ) \
+        .join(models.Movie.actors) \
+        .group_by(models.Star) \
+        .having(func.count(models.Movie.id) >= min_count) \
+        .order_by(desc(func.count(models.Movie.id))) \
+        .all()
+        
+# def get_birth_count_by_year(db: Session):
+#     return db.query(models.Star.birthdate.year, func.count()) \
+#             .group_by(models.Star.birthdate.year) \
+#             .order_by(models.star.birthdate) \
+#             .all()
 
 def create_star(db: Session, star: schemas.StarCreate):
     # convert schema object from rest api to db model object

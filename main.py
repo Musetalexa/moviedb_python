@@ -74,18 +74,6 @@ def read_movies_by_actor(n : str, db:Session = Depends(get_db)):
 def read_count_movies_by_year(db: Session = Depends(get_db)) -> List[Tuple[int, int]]:
     return crud.get_movies_count_by_year(db=db)
 
-@app.get("/movies/duration_min_by_year")
-def read_duration_min_movies_by_year(db: Session = Depends(get_db)) -> List[Tuple[int, int]]:
-    return crud.get_min_duration_movie_by_year(db=db)
-
-@app.get("/movies/duration_max_by_year")
-def read_duration_max_movies_by_year(db: Session = Depends(get_db)) -> List[Tuple[int, int]]:
-    return crud.get_max_duration_movie_by_year(db=db)
-
-@app.get("/movies/duration_average_by_year")
-def read_duration_average_movies_by_year(db: Session = Depends(get_db)) -> List[Tuple[int, int]]:
-    return crud.get_average_duration_movie_by_year(db=db)
-
 @app.get("/movies/stats_by_year")
 def read_stats_movies_by_year(db: Session = Depends(get_db)) -> List[Tuple[int, int, int, int]]:
     return crud.get_stats_by_year(db=db)
@@ -185,6 +173,16 @@ def read_stars_by_movie_acted_title(t: str, db: Session = Depends(get_db)):
 def read_stats_movie_by_director(minc: Optional[int] = 10, db: Session = Depends(get_db)):
     return crud.get_stats_movie_by_director(db=db, min_count=minc)
 
+@app.get("/stars/stats_movie_by_stars")
+def read_stats_movie_by_star(minc: Optional[int] = 10, db: Session = Depends(get_db)):
+    stats_films = crud.get_stats_movie_by_actor(db=db, min_count=minc)
+    if stats_films is None:
+        raise HTTPException(status_code=404, detail= "not found")
+    return [ {"name" : stat_film[0], "count movies": stat_film[1], "first movie year": stat_film[2], "last movie year": stat_film[3]} for stat_film in stats_films]
+
+@app.get("/stars/count_birth_by_year")
+def read_count_birth_by_year(db: Session = Depends(get_db)) -> List[Tuple[int, int]]:
+    return crud.get_birth_count_by_year(db=db)
 
 #Post and put Stars
 
